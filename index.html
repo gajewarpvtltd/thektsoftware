@@ -27,6 +27,72 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         html { scroll-behavior: smooth; }
+
+        /* ---------- Auto-moving strips (marquee) ---------- */
+        @keyframes scroll-left  { from { transform: translateX(0); } to { transform: translateX(calc(-1 * var(--shift))); } }
+        @keyframes scroll-right { from { transform: translateX(calc(-1 * var(--shift))); } to { transform: translateX(0); } }
+
+        .marquee {
+            overflow: hidden;
+            -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+            mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+        }
+        .marquee-track {
+            display: flex;
+            width: max-content;
+            animation: scroll-left 40s linear infinite; /* real duration is set by the script */
+        }
+        .marquee-track.reverse { animation-name: scroll-right; }
+        /* Pause when a visitor hovers, so they can read a card */
+        .marquee:hover .marquee-track { animation-play-state: paused; }
+
+        /* ============ THEME: change colours here, in one place ============ */
+        :root {
+            --dark-bg:      #0F172A;
+            --dark-heading: #FFFFFF;
+            --dark-body:    #CBD5E1;
+            --dark-muted:   #94A3B8;
+            --dark-card:    #1E293B;
+            --dark-border:  #334155;
+            --dark-badge:   rgba(37, 99, 235, 0.20);
+
+            --light-bg:      #FFFFFF;
+            --light-heading: #0F172A;
+            --light-body:    #475569;
+            --light-muted:   #64748B;
+            --light-card:    #F8FAFC;
+            --light-border:  #E2E8F0;
+            --light-badge:   #EFF6FF;
+        }
+
+        /* 1st, 3rd, 5th... section = dark. 2nd, 4th, 6th... = light.
+           To start with light instead, swap "odd" and "even" below. */
+        main > section:nth-of-type(odd) {
+            --bg: var(--dark-bg); --heading: var(--dark-heading); --body: var(--dark-body);
+            --muted: var(--dark-muted); --card: var(--dark-card); --border: var(--dark-border); --badge: var(--dark-badge);
+        }
+        main > section:nth-of-type(even) {
+            --bg: var(--light-bg); --heading: var(--light-heading); --body: var(--light-body);
+            --muted: var(--light-muted); --card: var(--light-card); --border: var(--light-border); --badge: var(--light-badge);
+        }
+        main > section:nth-of-type(odd),
+        main > section:nth-of-type(even) { background-color: var(--bg); color: var(--body); }
+
+        /* Makes the Tailwind classes you already use follow the section's shade */
+        main > section h1,
+        main > section .text-slate-900,
+        main > section .text-white:not(.bg-brand-accent) { color: var(--heading); }
+        main > section .text-slate-800,
+        main > section .text-slate-700,
+        main > section .text-slate-600,
+        main > section .text-slate-300 { color: var(--body); }
+        main > section .text-slate-500,
+        main > section .text-slate-400 { color: var(--muted); }
+        main > section .bg-white,
+        main > section .bg-brand-lightBg { background-color: var(--card); }
+        main > section .bg-blue-50 { background-color: var(--badge); }
+        main > section .border-slate-200,
+        main > section .border-slate-700 { border-color: var(--border); }
     </style>
 </head>
 <body class="bg-white text-slate-800 antialiased">
@@ -34,15 +100,16 @@
     <!-- Header Navigation -->
     <header class="fixed top-0 left-0 w-full bg-white/90 backdrop-blur-md z-50 border-b border-slate-100">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                        <a href="#" class="flex items-center space-x-3">
-                                          <img src="thektsoftwarelogo.png" alt="keystonetech logo" class="h-10 w-auto">
+            <a href="#" class="flex items-center space-x-3">
+                <img src="thektsoftwarelogo.png" alt="keystonetech logo" class="h-10 w-auto">
                 <span class="text-2xl font-bold text-slate-900 tracking-tight">keystonetech<span class="text-brand-accent">.</span></span>
             </a>
-            
+
             <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">
                 <a href="#about" class="hover:text-brand-accent transition">About</a>
                 <a href="#services" class="hover:text-brand-accent transition">Services</a>
                 <a href="#tech" class="hover:text-brand-accent transition">Stack</a>
+                <a href="#clients" class="hover:text-brand-accent transition">Clients</a>
                 <a href="#contact" class="hover:text-brand-accent transition">Contact</a>
             </nav>
 
@@ -50,6 +117,7 @@
         </div>
     </header>
 
+    <main>
     <!-- Hero Section -->
     <section class="pt-36 pb-20 md:pt-48 md:pb-32 bg-slate-900 text-white relative overflow-hidden">
         <div class="max-w-7xl mx-auto px-6 relative z-10">
@@ -165,18 +233,63 @@
         </div>
     </section>
 
-    <!-- Tech Stack Section -->
-    <section id="tech" class="py-16 bg-slate-900 text-white">
+    <!-- Tech Stack Section (auto-moving) -->
+    <section id="tech" class="py-16 bg-slate-900 text-white overflow-hidden">
         <div class="max-w-7xl mx-auto px-6 text-center">
             <p class="text-slate-400 text-xs font-semibold tracking-widest uppercase">Technologies & Frameworks We Master</p>
-            <div class="mt-8 flex flex-wrap justify-center items-center gap-8 md:gap-16 text-slate-400 font-semibold text-lg">
-                <span>React / Next.js</span>
-                <span>Node.js</span>
-                <span>Python</span>
-                <span>Snowflake</span>
-                <span>Apache Spark</span>
-                <span>AWS / Azure</span>
-                <span>PostgreSQL</span>
+        </div>
+        <div class="marquee mt-8">
+            <!-- Edit only the cards inside this track. The copy is created automatically. -->
+            <div class="marquee-track slow" data-marquee>
+                <span class="shrink-0 mr-16 text-slate-400 font-semibold text-lg whitespace-nowrap">React / Next.js</span>
+                <span class="shrink-0 mr-16 text-slate-400 font-semibold text-lg whitespace-nowrap">Node.js</span>
+                <span class="shrink-0 mr-16 text-slate-400 font-semibold text-lg whitespace-nowrap">Python</span>
+                <span class="shrink-0 mr-16 text-slate-400 font-semibold text-lg whitespace-nowrap">Snowflake</span>
+                <span class="shrink-0 mr-16 text-slate-400 font-semibold text-lg whitespace-nowrap">Apache Spark</span>
+                <span class="shrink-0 mr-16 text-slate-400 font-semibold text-lg whitespace-nowrap">AWS / Azure</span>
+                <span class="shrink-0 mr-16 text-slate-400 font-semibold text-lg whitespace-nowrap">PostgreSQL</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Client Feedback Section (auto-moving) -->
+    <section id="clients" class="py-24 bg-white overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <span class="text-brand-accent font-semibold text-sm tracking-wider uppercase">Client Success</span>
+            <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mt-2">What Our Clients Say</h2>
+            <p class="text-slate-600 mt-3 max-w-2xl mx-auto">Feedback from the teams we have built platforms and data solutions for.</p>
+        </div>
+
+        <!-- Row 1: feedback cards, moving left -->
+        <div class="marquee mt-14">
+            <!-- Edit only the cards inside this track. The copy is created automatically. -->
+            <div class="marquee-track" data-marquee>
+                <div class="w-80 md:w-96 shrink-0 mr-6 bg-brand-lightBg border border-slate-200 rounded-xl p-6 text-left">
+                    <p class="text-slate-600 text-sm leading-relaxed">"The team has demonstrated exceptional professionalism and expertise in delivering IT services. They have successfully handled complex requirements with efficiency and consistently maintained high standards of delivery. We appreciate their commitment and look forward to continued collaboration."</p>
+                    <div class="mt-5 border-t border-slate-200 pt-4">
+                        <p class="font-bold text-slate-900 text-sm">Pradeep G</p>
+                        <p class="text-xs text-slate-500"> Technical Principal Engineer, KloudOcean IT Services and Solutions Pvt Ltd</p>
+                    </div>
+                </div>
+                <div class="w-80 md:w-96 shrink-0 mr-6 bg-brand-lightBg border border-slate-200 rounded-xl p-6 text-left">
+                    <p class="text-slate-600 text-sm leading-relaxed">"They transformed our vision into a functional, user-friendly website with great attention to detail. Their ability to understand our business needs and deliver the right solution made the entire experience seamless."</p>
+                    <div class="mt-5 border-t border-slate-200 pt-4">
+                        <p class="font-bold text-slate-900 text-sm">Uday Ladda</p>
+                        <p class="text-xs text-slate-500">Managing Director, Prism Engineering</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: client names, moving right -->
+        <div class="max-w-7xl mx-auto px-6 text-center mt-16">
+            <p class="text-slate-400 text-xs font-semibold tracking-widest uppercase">Our Clients</p>
+        </div>
+        <div class="marquee mt-6">
+            <!-- Replace "Client Company" with real client names, or swap each span for an <img> logo. -->
+            <div class="marquee-track reverse slow" data-marquee>
+                <span class="shrink-0 mr-4 px-6 py-3 rounded-full border border-slate-200 bg-brand-lightBg text-slate-600 font-semibold text-sm whitespace-nowrap">PRISM ENGINEERING</span>
+                <span class="shrink-0 mr-4 px-6 py-3 rounded-full border border-slate-200 bg-brand-lightBg text-slate-600 font-semibold text-sm whitespace-nowrap">KloudOcean IT Services and Solutions Pvt Ltd</span>
             </div>
         </div>
     </section>
@@ -207,6 +320,7 @@
             </dl>
         </div>
     </section>
+    </main>
 
     <!-- Footer -->
     <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
@@ -218,6 +332,46 @@
             <p class="text-xs text-slate-500">&copy; 2026 keystonetech Software Pvt. Ltd. All rights reserved.</p>
         </div>
     </footer>
+
+    <!-- Makes each moving strip loop seamlessly: copies the items once, so you only edit one set -->
+    <script>
+        (function () {
+            var DEFAULT_SPEED = 50; // pixels per second; larger = faster
+
+            function build(track) {
+                // remove old copies (used when the window is resized)
+                track.querySelectorAll('[data-clone]').forEach(function (n) { n.remove(); });
+
+                var originals = Array.from(track.children);
+                var setWidth = track.scrollWidth;              // width of one full set of items
+                var viewWidth = track.parentElement.offsetWidth;
+                if (!setWidth) return;
+
+                // add enough copies so the strip is always wider than the screen
+                var copies = Math.ceil(viewWidth / setWidth) + 1;
+                for (var i = 0; i < copies; i++) {
+                    originals.forEach(function (item) {
+                        var c = item.cloneNode(true);
+                        c.setAttribute('aria-hidden', 'true');
+                        c.setAttribute('data-clone', '');
+                        track.appendChild(c);
+                    });
+                }
+
+                var speed = parseFloat(track.getAttribute('data-speed')) || DEFAULT_SPEED;
+                track.style.setProperty('--shift', setWidth + 'px');
+                track.style.animationDuration = (setWidth / speed) + 's';
+            }
+
+            function buildAll() {
+                document.querySelectorAll('[data-marquee]').forEach(build);
+            }
+
+            window.addEventListener('load', buildAll);
+            var t;
+            window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(buildAll, 200); });
+        })();
+    </script>
 
 </body>
 </html>
